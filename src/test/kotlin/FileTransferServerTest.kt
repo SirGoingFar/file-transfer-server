@@ -9,7 +9,7 @@ class FileTransferServerTest {
 
     @Test
     fun testServerProvisioning_connectToValidSocketAddress_serverIsReadyForConnection() {
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val fileTransferServer = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 return true
@@ -21,7 +21,7 @@ class FileTransferServerTest {
 
     @Test
     fun testServerConnection_clientAttemptConnection_connectionIsSuccessful() {
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 return true
@@ -39,7 +39,7 @@ class FileTransferServerTest {
 
     @Test
     fun testServerConnection_clientAttemptsConnectionWhenServerAlreadyShutdown_throwsConnectException() {
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 return true
@@ -55,7 +55,7 @@ class FileTransferServerTest {
     @Test
     fun testServerConnection_clientSendsData_correctDataIsDelivered() {
         val testFileContent = "Here is the file content"
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 assertTrue { fileContent.contains(testFileContent) }

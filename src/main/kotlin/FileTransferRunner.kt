@@ -1,6 +1,7 @@
 import FileUtils.Companion.getMultipleFilesInputStream
 import FileUtils.Companion.getSingleFileInputStream
 import java.net.InetSocketAddress
+import java.net.SocketException
 import kotlin.system.exitProcess
 
 
@@ -23,22 +24,27 @@ fun main() {
     //Define peers: Connect clients
     for (i in 1..10) {
 
-        val fileTransferClient = FileTransferClient(socketAddress)
-
         //Exchange data
-        if (i % 2 != 0) {
-            fileTransferClient.send(getSingleFileInputStream("Content - $i"))
-        } else {
-            fileTransferClient.send(getMultipleFilesInputStream("Content", 2))
+        {
+            val fileTransferClient = FileTransferClient(socketAddress)
+
+            if (i % 2 != 0) {
+                fileTransferClient.send(getSingleFileInputStream("Content - $i"))
+            } else {
+                fileTransferClient.send(getMultipleFilesInputStream("Content", 2))
+            }
+
+            fileTransferClient.close()
+        }.multiCatch(SocketException::class) {
+            println("ERROR - [File Consumer] Unable to send file: $it")
         }
 
-        fileTransferClient.close()
     }
 
     //Shutdown
     fileTransferServer.shutdown()
 
-    Thread.sleep(3000) //Wait for other processes to stop
+    Thread.sleep(2000) //Wait for other processes to stop
 
     //Shut down application
     exitProcess(-1)

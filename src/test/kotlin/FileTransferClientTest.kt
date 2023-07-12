@@ -11,14 +11,14 @@ class FileTransferClientTest {
 
     @Test
     fun testConnectToHost_hostIsNotReachable_throwsConnectException() {
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         assertThrows<ConnectException> { val fileTransferClient = FileTransferClient(socketAddress) }
     }
 
     @Test
     fun testSendData_validDataIsSent_validDataIsDelivered() {
         val testFileContent = "Here is the file content"
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 assertTrue { fileContent.contains(testFileContent) }
@@ -38,7 +38,7 @@ class FileTransferClientTest {
     @Test
     fun testSendData_clientAlreadyClosedConnection_throwsSocketException() {
         val testFileContent = "Here is the file content"
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 return true
@@ -58,7 +58,7 @@ class FileTransferClientTest {
 
     @Test
     fun testReconnect_clientAlreadyDisconnected_clientEventuallyReconnect() {
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 return true
@@ -78,7 +78,7 @@ class FileTransferClientTest {
 
     @Test
     fun testReconnect_clientStillConnected_throwsSocketException() {
-        val socketAddress = InetSocketAddress("localhost", 12002)
+        val socketAddress = InetSocketAddress("127.0.0.1", 12002)
         val server = FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 return true
