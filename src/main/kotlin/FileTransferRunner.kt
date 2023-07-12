@@ -1,12 +1,13 @@
 import FileUtils.Companion.getMultipleFilesInputStream
 import FileUtils.Companion.getSingleFileInputStream
 import java.net.InetSocketAddress
+import kotlin.system.exitProcess
 
 
 fun main() {
 
     //Define connection points
-    val socketAddress = InetSocketAddress("0.0.0.0", 12002)
+    val socketAddress = InetSocketAddress("127.0.0.1", 12002)
 
     //Define peers: Start server
     val fileTransferServer =
@@ -36,5 +37,10 @@ fun main() {
 
     //Shutdown
     fileTransferServer.shutdown()
+
+    Thread.sleep(3000) //Wait for other processes to stop
+
+    //Shut down application
+    exitProcess(-1)
 
 }

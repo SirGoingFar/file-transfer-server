@@ -1,9 +1,6 @@
 import java.io.IOException
 import java.io.InputStream
-import java.net.ConnectException
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.net.UnknownHostException
+import java.net.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
@@ -16,20 +13,27 @@ internal class FileTransferClient(private val socketAddress: InetSocketAddress) 
     init {
         do {
             {
-//                socket = Socket(socketAddress.address, socketAddress.port)
-//                socket.co
-                socket = Socket()
-                socket.connect(socketAddress, 6000)
+                socket = Socket().apply {
+                    connect(socketAddress, 5000)
+                }
+                if (socket.isConnected) {
+                    println("INFO - [File Transfer Client] Connected successfully to $socketAddress")
+                }
                 hostConnectionRetryCount++
             }.multiCatch(
                 UnknownHostException::class,
-                ConnectException::class
+                ConnectException::class,
+                SocketTimeoutException::class
             ) {
                 hostConnectionRetryCount++
                 println("ERROR - [File Transfer Client] Unable to connect to host [${socketAddress}]. [Reason: $it]")
-                throw it
+                if (hostConnectionRetryCount >= MAX_HOST_RETRY_COUNT) {
+                    throw it
+                } else {
+                    Thread.sleep(2000) //wait a bit before retrying
+                }
             }
-        } while (hostConnectionRetryCount < 3)
+        } while (hostConnectionRetryCount < MAX_HOST_RETRY_COUNT)
     }
 
     fun send(inputStream: InputStream): Boolean {
@@ -61,5 +65,9 @@ internal class FileTransferClient(private val socketAddress: InetSocketAddress) 
     }
 
     fun isConnected() = socket.isConnected
+
+    companion object {
+        private const val MAX_HOST_RETRY_COUNT = 3
+    }
 
 }

@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 internal class FileTransferServer(
     private val socketAddress: InetSocketAddress,
-    private val connectionTimeout: Int = 60000,
+    private val connectionTimeout: Int = 15000,
     private val fileHandler: FileHandler
 ) {
     private val serverSocket: ServerSocket
@@ -19,12 +19,12 @@ internal class FileTransferServer(
     init {
         try {
             serverSocket = ServerSocket().apply {
-                setPerformancePreferences(0, 1, 1)
+                setPerformancePreferences(0, 1, 2)
                 reuseAddress = true
                 soTimeout = connectionTimeout
                 bind(socketAddress, 20)
             }
-            println("INFO - [File Transfer Server] Listening on port [${socketAddress.port}] of host [${socketAddress.address}] and ready for connection.")
+            println("INFO - [File Transfer Server] Listening on port [${serverSocket.localPort}] of host [${socketAddress.address}] and ready for connection.")
         } catch (ioException: IOException) {
             throw RuntimeException("ERROR - [File Transfer Server] Unable to provision server", ioException)
         }
@@ -32,7 +32,6 @@ internal class FileTransferServer(
 
     fun start() {
         serverSocket.use { serverSocket ->
-
             while (canReceiveNewClientConnection) {
                 try {
                     val socket = serverSocket.accept()
@@ -61,7 +60,7 @@ internal class FileTransferServer(
                     println("ERROR - [File Transfer Server] Something went wrong. [Reason: $ioException]")
                 }
             }
-
+            println("INFO - [File Transfer Server] No longer accepting connection.")
         }
     }
 
@@ -69,12 +68,14 @@ internal class FileTransferServer(
         try {
             serverSocket.close()
             canReceiveNewClientConnection = !serverSocket.isClosed
+            numberOfOngoingConnection.set(0)
+            println("INFO - [File Transfer Server] Shutting down...")
         } catch (ioException: IOException) {
             println("ERROR - [File Transfer Server] Unable to shutdown the server. [Reason: $ioException]")
         }
     }
 
-    fun isReadyForConnection() = serverSocket.isBound && !serverSocket.isClosed
+    fun isReadyForConnection() = serverSocket.isBound && !serverSocket.isClosed && canReceiveNewClientConnection
 
     fun isUnavailableForConnection() = !canReceiveNewClientConnection || serverSocket.isClosed
 
