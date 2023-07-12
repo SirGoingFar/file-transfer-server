@@ -11,7 +11,7 @@ fun main() {
 
     //Define peers: Start server
     val fileTransferServer =
-        FileTransferServer(socketAddress, 10000, object : FileTransferServer.FileHandler {
+        FileTransferServer(socketAddress, 10_000, object : FileTransferServer.FileHandler {
             override fun handle(fileContent: String): Boolean {
                 println("INFO - [File Consumer] Received content: $fileContent")
                 return true

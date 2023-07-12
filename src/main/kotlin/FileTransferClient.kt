@@ -5,26 +5,17 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 
-internal class FileTransferClient(private val socketAddress: InetSocketAddress) {
+internal class FileTransferClient(
+    private val socketAddress: InetSocketAddress,
+    private val connectionTimeout: Int = 5000
+) {
 
     private lateinit var socket: Socket
     private var hostConnectionRetryCount = 0
 
     init {
         do {
-            {
-                socket = Socket().apply {
-                    connect(socketAddress, 5000)
-                }
-                if (socket.isConnected) {
-                    println("INFO - [File Transfer Client] Connected successfully to $socketAddress")
-                }
-                hostConnectionRetryCount++
-            }.multiCatch(
-                UnknownHostException::class,
-                ConnectException::class,
-                SocketTimeoutException::class
-            ) {
+            createSocket {
                 hostConnectionRetryCount++
                 println("ERROR - [File Transfer Client] Unable to connect to host [${socketAddress}]. [Reason: $it]")
                 if (hostConnectionRetryCount >= MAX_HOST_RETRY_COUNT) {
@@ -36,7 +27,29 @@ internal class FileTransferClient(private val socketAddress: InetSocketAddress) 
         } while (hostConnectionRetryCount < MAX_HOST_RETRY_COUNT)
     }
 
+    private fun createSocket(onError: (Throwable) -> Unit) {
+        {
+            socket = Socket().apply {
+                connect(socketAddress, connectionTimeout)
+            }
+            if (socket.isConnected) {
+                println("INFO - [File Transfer Client] Connected successfully to $socketAddress")
+            }
+            hostConnectionRetryCount++
+        }.multiCatch(
+            UnknownHostException::class,
+            ConnectException::class,
+            SocketTimeoutException::class
+        ) {
+            onError(it)
+        }
+    }
+
     fun send(inputStream: InputStream): Boolean {
+        if (!isConnected()) {
+            throw SocketException("Socket is closed");
+        }
+
         return try {
             val zipInputStream = ZipInputStream(inputStream)
             var entry: ZipEntry?
@@ -64,7 +77,18 @@ internal class FileTransferClient(private val socketAddress: InetSocketAddress) 
         }
     }
 
-    fun isConnected() = socket.isConnected
+    fun reconnect() {
+        if (!isConnected()) {
+            createSocket {
+                println("ERROR - [File Transfer Client] Unable to reconnect to host [${socketAddress}]. [Reason: $it]")
+                throw it
+            }
+        } else {
+            throw Exception("Client already connected")
+        }
+    }
+
+    fun isConnected() = socket.isBound && !socket.isConnected
 
     companion object {
         private const val MAX_HOST_RETRY_COUNT = 3
