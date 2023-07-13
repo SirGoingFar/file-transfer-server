@@ -78,17 +78,17 @@ internal class FileTransferClient(
     }
 
     fun reconnect() {
-        if (!isConnected()) {
+        if (socket.isClosed()) {
             createSocket {
                 println("ERROR - [File Transfer Client] Unable to reconnect to host [${socketAddress}]. [Reason: $it]")
                 throw it
             }
         } else {
-            throw Exception("Client already connected")
+            throw SocketException("Client already connected")
         }
     }
 
-    fun isConnected() = socket.isBound && !socket.isConnected
+    fun isConnected() = socket.isBound && !socket.isClosed && socket.isConnected
 
     companion object {
         private const val MAX_HOST_RETRY_COUNT = 3

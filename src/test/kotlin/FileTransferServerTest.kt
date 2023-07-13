@@ -49,6 +49,7 @@ class FileTransferServerTest {
         Thread.sleep(3000) //wait a bit to spin up server
         server.shutdown()
 
+        assertTrue { server.isUnavailableForConnection() }
         assertThrows<ConnectException> { FileTransferClient(socketAddress) }
     }
 

@@ -1,3 +1,4 @@
+import FileUtils.Companion.getMultipleFilesInputStream
 import FileUtils.Companion.getSingleFileInputStream
 import org.junit.jupiter.api.assertThrows
 import java.net.ConnectException
@@ -51,7 +52,7 @@ class FileTransferClientTest {
 
         Thread.sleep(3000) //allowance for components whose shutdown may take time
 
-        assertThrows<SocketException> { client.send(getSingleFileInputStream(testFileContent)) }
+        assertThrows<SocketException> { client.send(getMultipleFilesInputStream(testFileContent, 3)) }
 
         server.shutdown()
     }
